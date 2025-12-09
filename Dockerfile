@@ -49,8 +49,8 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
 # 运行时阶段 - 使用busybox:musl（极小的基础镜像，包含基本shell）
 # FROM busybox:musl
 # FROM alpine:latest
-# FROM scratch
-FROM hectorm/scratch:latest AS pod
+FROM scratch AS pod
+# FROM hectorm/scratch:latest AS pod
 
 
 # 复制CA证书（用于HTTPS请求）
