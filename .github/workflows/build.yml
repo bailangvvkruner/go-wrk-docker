@@ -67,7 +67,6 @@ jobs:
               linux/arm/v6
               linux/ppc64le
               linux/mips64le
-              linux/s390x
           push: true
           tags: |
             ${{ env.DOCKER_REPO }}:${{ env.IMAGE_TAG }}
