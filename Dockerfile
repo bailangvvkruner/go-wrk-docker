@@ -24,33 +24,33 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     # 构建所有四个组件
     && echo "Building all four components..." \
     # 构建原始go-wrk
-    && CGO_ENABLED=1 go build \
-    -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
+    && CGO_ENABLED=0 go build \
+    -tags netgo,osusergo \
+    -ldflags="-s -w" \
     -o go-wrk \
     go-wrk.go \
     && echo "go-wrk binary size:" \
     && du -b go-wrk \
     # 构建协调器
-    && CGO_ENABLED=1 go build \
-    -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
+    && CGO_ENABLED=0 go build \
+    -tags netgo,osusergo \
+    -ldflags="-s -w" \
     -o go-wrk-coordinator \
     coordinator.go \
     && echo "go-wrk-coordinator binary size:" \
     && du -b go-wrk-coordinator \
     # 构建工作节点
-    && CGO_ENABLED=1 go build \
-    -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
+    && CGO_ENABLED=0 go build \
+    -tags netgo,osusergo \
+    -ldflags="-s -w" \
     -o go-wrk-worker \
     worker.go \
     && echo "go-wrk-worker binary size:" \
     && du -b go-wrk-worker \
     # 构建分布式客户端
-    && CGO_ENABLED=1 go build \
-    -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
+    && CGO_ENABLED=0 go build \
+    -tags netgo,osusergo \
+    -ldflags="-s -w" \
     -o go-wrk-dist \
     go-wrk-dist.go \
     && echo "go-wrk-dist binary size:" \
