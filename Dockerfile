@@ -19,7 +19,8 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     binutils \
     upx \
     # 直接下载并构建 go-wrk（无需本地源代码）
-    && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
+    # && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
+    && git clone --depth 1 https://github.com/bailangvvkruner/go-wrk-docker . \
     # 构建静态二进制文件
     # && CGO_ENABLED=1 go build \
     && CGO_ENABLED=1 go build \
