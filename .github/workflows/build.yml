@@ -4,7 +4,7 @@ name: go-wrk Docker Image CI/CD Pipeline
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ fast ]
   # schedule:
   #   - cron: '0 3 * * *' # 每天构建一次（可选）
   schedule:
@@ -20,7 +20,7 @@ permissions:
 env:
   DOCKER_REPO: bailangvvking/go-wrk
   IMAGE_NAME: go-wrk
-  IMAGE_TAG: latest
+  IMAGE_TAG: fast
 
 jobs:
   build-and-push:
@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -61,11 +63,6 @@ jobs:
           #     linux/s390x
           platforms: |
               linux/amd64
-              linux/arm64
-              linux/386
-              linux/arm/v7
-              linux/arm/v6
-              linux/ppc64le
           push: true
           tags: |
             ${{ env.DOCKER_REPO }}:${{ env.IMAGE_TAG }}
@@ -82,7 +79,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:fast
           format: 'sarif'
           output: 'trivy-results.sarif'
           # 禁用缓存以减少存储使用
