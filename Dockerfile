@@ -7,25 +7,21 @@ FROM golang:alpine AS builder
 
 WORKDIR /app
 
-# 安装构建依赖（包括C++编译器和strip工具）
+# 安装构建依赖（禁用CGO后只需要基本工具）
 # 使用--no-scripts禁用触发器执行，避免busybox触发器在arm64架构下的兼容性问题
 RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
-    gcc \
-    g++ \
-    musl-dev \
     git \
-    build-base \
     # 包含strip命令
     binutils \
     upx \
     # 直接下载并构建 go-wrk（无需本地源代码）
     && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
-    # 构建静态二进制文件
-    # && CGO_ENABLED=1 go build \
-    && CGO_ENABLED=1 go build \
-    -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
-    # -ldflags="-s -w" \
+    # 构建静态二进制文件（优化版本 - 禁用CGO）
+    && CGO_ENABLED=0 go build \
+    -tags netgo,osusergo \
+    -ldflags="-s -w -X main.version=optimized" \
+    -gcflags="-B" \
+    -trimpath \
     -o go-wrk \
     # 显示构建后的文件大小
     && echo "Binary size after build:" \
@@ -73,7 +69,9 @@ COPY --from=builder /app/go-wrk /go-wrk
 # 在内存充足的环境中，增大此值（例如 GOGC=200）可以减少GC的运行频率，
 # 从而可能提升程序性能，但代价是消耗更多的内存。
 # 您可以在 `docker run` 时通过 `-e GOGC=200` 来覆盖此默认设置。
-# ENV GOGC=100
+ENV GOGC=200
+ENV GOMAXPROCS=1
+ENV GODEBUG="gctrace=0,invalidptr=0"
 
 # 设置入口点
 ENTRYPOINT ["/go-wrk"]
