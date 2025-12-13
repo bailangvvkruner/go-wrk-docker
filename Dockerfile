@@ -28,7 +28,7 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     -tags netgo,osusergo,static_build \
     -ldflags="-s -w -linkmode=external -extldflags '-static'" \
     -gcflags="all=-B -l=4 -d=checkptr=0" \
-    -buildmode=pie -trimpath -o go-wrk-extreme
+    -buildmode=pie -trimpath -o go-wrk-extreme \
     # 显示构建后的文件大小
     && echo "Binary size after build:" \
     # && du -h go-wrk \
