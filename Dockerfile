@@ -17,12 +17,18 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     # 直接下载并构建 go-wrk（无需本地源代码）
     && git clone --depth 1 -b master https://github.com/bailangvvkruner/go-wrk . \
     # 构建静态二进制文件（优化版本 - 禁用CGO）
-    && CGO_ENABLED=0 go build \
-    -tags netgo,osusergo \
-    -ldflags="-s -w -X main.version=optimized" \
-    -gcflags="-B" \
-    -trimpath \
-    -o go-wrk \
+    # && CGO_ENABLED=0 go build \
+    # -tags netgo,osusergo \
+    # -ldflags="-s -w -X main.version=optimized" \
+    # -gcflags="-B" \
+    # -trimpath \
+    # -o go-wrk \
+    # 使用极致优化参数构建
+    CGO_ENABLED=0 go build \
+    -tags netgo,osusergo,static_build \
+    -ldflags="-s -w -linkmode=external -extldflags '-static'" \
+    -gcflags="all=-B -l=4 -d=checkptr=0" \
+    -buildmode=pie -trimpath -o go-wrk-extreme
     # 显示构建后的文件大小
     && echo "Binary size after build:" \
     # && du -h go-wrk \
