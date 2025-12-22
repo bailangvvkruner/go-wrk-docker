@@ -22,9 +22,10 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
     # 构建静态二进制文件
     # && CGO_ENABLED=1 go build \
-    && CGO_ENABLED=1 go build \
+    && CGO_ENABLED=0 go build \
     -tags extended,netgo,osusergo \
-    -ldflags="-s -w -extldflags -static" \
+    # -ldflags="-s -w -extldflags -static" \
+    -ldflags="-s -w" \
     # -ldflags="-s -w" \
     -o go-wrk \
     # 显示构建后的文件大小
@@ -58,6 +59,11 @@ FROM scratch AS pod
 
 # 复制go-wrk二进制文件
 COPY --from=builder /app/go-wrk /go-wrk
+
+# 复制/etc/services文件用于服务名解析 DNS解析要用
+COPY --from=builder /etc/services /etc/services
+# 复制/etc/nsswitch.conf文件用于DNS解析 host模式忽略
+# COPY --from=builder /etc/nsswitch.conf /etc/nsswitch.conf
 
 # 创建非root用户（增强安全性）
 # RUN adduser -D -u 1000 gowrk
