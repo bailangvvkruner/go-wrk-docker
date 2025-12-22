@@ -23,6 +23,8 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
     # 构建静态二进制文件
     # && CGO_ENABLED=1 go build \
+    # 更新所有组件到最新版本
+    && go get -u ./... \
     && CGO_ENABLED=0 go build \
     -tags extended,netgo,osusergo \
     # -ldflags="-s -w -extldflags -static" \
