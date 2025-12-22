@@ -18,6 +18,7 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     # 包含strip命令
     binutils \
     upx \
+    ca-certificates \
     # 直接下载并构建 go-wrk（无需本地源代码）
     && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
     # 构建静态二进制文件
@@ -55,7 +56,7 @@ FROM scratch AS pod
 
 
 # 复制CA证书（用于HTTPS请求）
-# COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # 复制go-wrk二进制文件
 COPY --from=builder /app/go-wrk /go-wrk
