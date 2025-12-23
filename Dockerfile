@@ -7,28 +7,30 @@ FROM golang:alpine AS builder
 
 WORKDIR /app
 
-# 安装构建依赖（禁用CGO后只需要基本工具）
+# 安装构建依赖（包括C++编译器和strip工具）
 # 使用--no-scripts禁用触发器执行，避免busybox触发器在arm64架构下的兼容性问题
 RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
+    gcc \
+    g++ \
+    musl-dev \
     git \
+    build-base \
     # 包含strip命令
     binutils \
     upx \
+    ca-certificates \
     # 直接下载并构建 go-wrk（无需本地源代码）
-    && git clone --depth 1 -b master https://github.com/bailangvvkruner/go-wrk . \
-    # 构建静态二进制文件（优化版本 - 禁用CGO）
-    # && CGO_ENABLED=0 go build \
-    # -tags netgo,osusergo \
-    # -ldflags="-s -w -X main.version=optimized" \
-    # -gcflags="-B" \
-    # -trimpath \
-    # -o go-wrk \
-    # 使用极致优化参数构建
-    CGO_ENABLED=0 go build \
-    -tags netgo,osusergo,static_build \
-    -ldflags="-s -w -linkmode=external -extldflags '-static'" \
-    -gcflags="all=-B -l=4 -d=checkptr=0" \
-    -buildmode=pie -trimpath -o go-wrk-extreme \
+    && git clone --depth 1 -b fast https://github.com/tsliwowicz/go-wrk . \
+    # 构建静态二进制文件
+    # && CGO_ENABLED=1 go build \
+    # 更新所有组件到最新版本
+    && go get -u ./... \
+    && CGO_ENABLED=0 go build \
+    -tags extended,netgo,osusergo \
+    # -ldflags="-s -w -extldflags -static" \
+    -ldflags="-s -w" \
+    # -ldflags="-s -w" \
+    -o go-wrk \
     # 显示构建后的文件大小
     && echo "Binary size after build:" \
     # && du -h go-wrk \
@@ -56,10 +58,15 @@ FROM scratch AS pod
 
 
 # 复制CA证书（用于HTTPS请求）
-# COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # 复制go-wrk二进制文件
 COPY --from=builder /app/go-wrk /go-wrk
+
+# 复制/etc/services文件用于服务名解析 DNS解析要用
+COPY --from=builder /etc/services /etc/services
+# 复制/etc/nsswitch.conf文件用于DNS解析 host模式忽略
+# COPY --from=builder /etc/nsswitch.conf /etc/nsswitch.conf
 
 # 创建非root用户（增强安全性）
 # RUN adduser -D -u 1000 gowrk
@@ -76,8 +83,6 @@ COPY --from=builder /app/go-wrk /go-wrk
 # 从而可能提升程序性能，但代价是消耗更多的内存。
 # 您可以在 `docker run` 时通过 `-e GOGC=200` 来覆盖此默认设置。
 ENV GOGC=200
-ENV GOMAXPROCS=1
-ENV GODEBUG="gctrace=0,invalidptr=0"
 
 # 设置入口点
 ENTRYPOINT ["/go-wrk"]
