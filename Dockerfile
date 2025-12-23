@@ -20,7 +20,7 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     upx \
     ca-certificates \
     # 直接下载并构建 go-wrk（无需本地源代码）
-    && git clone --depth 1 -b fast https://github.com/tsliwowicz/go-wrk . \
+    && git clone --depth 1 -b fast https://github.com/bailangvvkruner/go-wrk . \
     # 构建静态二进制文件
     # && CGO_ENABLED=1 go build \
     # 更新所有组件到最新版本
