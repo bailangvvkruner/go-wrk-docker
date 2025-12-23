@@ -10,11 +10,11 @@ WORKDIR /app
 # 安装构建依赖（包括C++编译器和strip工具）
 # 使用--no-scripts禁用触发器执行，避免busybox触发器在arm64架构下的兼容性问题
 RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
-    gcc \
-    g++ \
+    # gcc \
+    # g++ \
     musl-dev \
     git \
-    build-base \
+    # build-base \
     # 包含strip命令
     binutils \
     upx \
