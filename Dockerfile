@@ -16,7 +16,7 @@ RUN set -eux \
     # g++ \
     # musl-dev \
     git \
-    build-base \
+    # build-base \
     # 包含strip命令
     binutils \
     # upx \
