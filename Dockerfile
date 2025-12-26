@@ -9,16 +9,23 @@ WORKDIR /app
 
 # 安装构建依赖（包括C++编译器和strip工具）
 # 使用--no-scripts禁用触发器执行，避免busybox触发器在arm64架构下的兼容性问题
-RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
-    gcc \
-    g++ \
-    musl-dev \
+RUN set -eux \
+    && FILENAME=go-wrk \
+    && apk add --no-cache --no-scripts --virtual .build-deps \
+    # gcc \
+    # g++ \
+    # musl-dev \
     git \
     build-base \
     # 包含strip命令
     binutils \
-    upx \
+    # upx \
     ca-certificates \
+    \
+    # 尝试安装 upx，如果不可用则继续（某些架构可能不支持）
+    && apk add --no-cache --no-scripts --virtual .upx-deps \
+        upx 2>/dev/null || echo "upx not available, skipping compression" \
+    \
     # 直接下载并构建 go-wrk（无需本地源代码）
     && git clone --depth 1 https://github.com/tsliwowicz/go-wrk . \
     # 构建静态二进制文件
@@ -30,20 +37,26 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
     # -ldflags="-s -w -extldflags -static" \
     -ldflags="-s -w" \
     # -ldflags="-s -w" \
-    -o go-wrk \
+    -o $FILENAME \
     # 显示构建后的文件大小
     && echo "Binary size after build:" \
     # && du -h go-wrk \
-    && du -b go-wrk \
+    && du -b $FILENAME \
     # 使用strip进一步减小二进制文件大小
-    && strip --strip-all go-wrk \
+    && strip --strip-all $FILENAME \
     && echo "Binary size after stripping:" \
     # && du -h go-wrk \
-    && du -b go-wrk \
-    && upx --best --lzma go-wrk \
+    && du -b $FILENAME \
+    # && upx --best --lzma $FILENAME \
+    && (upx --best --lzma $FILENAME 2>/dev/null || echo "upx compression skipped") \
     && echo "Binary size after upx:" \
     # && du -h go-wrk \
-    && du -b go-wrk
+    && du -b $FILENAME \
+    # 清理Go缓存和临时文件以释放空间
+    && go clean -modcache \
+    && go clean -cache \
+    && rm -rf /tmp/go-build* \
+    && rm -rf /root/.cache/go-build
     # 注意：这里故意不清理构建依赖，因为是多阶段构建，且清理会触发busybox触发器错误
     # 最终镜像只复制二进制文件，构建阶段的中间层不会影响最终镜像大小
     # # 清理构建依赖
@@ -55,7 +68,6 @@ RUN set -eux && apk add --no-cache --no-scripts --virtual .build-deps \
 # FROM alpine:latest
 FROM scratch AS pod
 # FROM hectorm/scratch:latest AS pod
-
 
 # 复制CA证书（用于HTTPS请求）
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
